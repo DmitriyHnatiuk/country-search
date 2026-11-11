@@ -1,0 +1,17 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	transition: all 0.5s;
+	text-decoration: none;
+	list-style: none;
+	color: inherit;
+}
+
+html {
+	scroll-behavior: smooth;
+	font-family: Loto, sans-serif;
+	min-height: 100vh;
+	background-color: #f6f4ee;
+	font-size: 62.5%;
+}
