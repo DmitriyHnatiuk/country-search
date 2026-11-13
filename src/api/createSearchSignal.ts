@@ -1,3 +1,5 @@
 export function createSearchSignal(externalSignal: AbortSignal | undefined, timeoutMs: number): AbortSignal {
-	throw new Error('Not implemented', { cause: { externalSignal, timeoutMs } });
+	const timeoutSignal = AbortSignal.timeout(timeoutMs);
+	const signals = [externalSignal, timeoutSignal].filter((s): s is AbortSignal => s !== undefined);
+	return AbortSignal.any(signals);
 }
