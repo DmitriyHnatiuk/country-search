@@ -29,3 +29,18 @@ export type CountryCardType = {
 	languages: string[];
 	flagUrl: string;
 };
+
+export type SearchStateType = {
+	query: string;
+	results: CountryCardType[];
+	error: string | undefined;
+	isLoading: boolean;
+};
+
+export type SearchControllerType = {
+	getState: () => SearchStateType;
+	subscribe: (fn: () => void) => () => void;
+	setQuery: (q: string) => void;
+	retry: () => void;
+	clearCache: () => void;
+};
