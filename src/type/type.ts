@@ -39,7 +39,7 @@ export type SearchStateType = {
 
 export type SearchControllerType = {
 	getState: () => SearchStateType;
-	subscribe: (fn: () => void) => () => void;
+	subscribe: (fn: (state: SearchStateType) => void) => () => void;
 	setQuery: (q: string) => void;
 	retry: () => void;
 	clearCache: () => void;
