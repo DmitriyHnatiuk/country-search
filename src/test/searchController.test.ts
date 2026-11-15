@@ -36,7 +36,7 @@ describe('searchController', () => {
 	const state = () => ctrl.getState();
 
 	it('aborts previous request immediately on new input', async () => {
-		let resolveFirst: (v: DataType[]) => void;
+		let resolveFirst!: (v: DataType[]) => void;
 		const firstPromise = new Promise<DataType[]>((resolve) => (resolveFirst = resolve));
 
 		mockSearchCountries.mockImplementationOnce(() => firstPromise).mockResolvedValueOnce([RAW_COUNTRY]);
@@ -49,6 +49,7 @@ describe('searchController', () => {
 
 		await vi.waitFor(() => expect(state()?.results[0]?.name).toBe('Italy'));
 		expect(state().error).toBeUndefined();
+		void resolveFirst;
 	});
 
 	it('silently ignores AbortError', async () => {

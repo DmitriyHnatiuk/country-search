@@ -28,6 +28,8 @@ describe('mapCountryResponse', () => {
 
 	it('handles missing optional fields gracefully', () => {
 		const { capital, languages, ...rest } = RAW_COUNTRY;
+		void capital;
+		void languages;
 		const result = mapCountryResponse(rest);
 
 		expect(result.capital).toBe('');
