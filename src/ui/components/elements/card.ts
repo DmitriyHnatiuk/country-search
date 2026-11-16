@@ -41,3 +41,11 @@ export const countryCard = (country: CountryCardType) => {
 	li.append(flag, content);
 	return li;
 };
+
+export const renderEmptyCard = (query: string) => {
+	return createElement({
+		tag: 'li',
+		className: 'country__card--empty',
+		textContent: `No results for «${query}»`,
+	});
+};

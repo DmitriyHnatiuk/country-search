@@ -10,7 +10,10 @@ export async function searchCountries(query: string, signal?: AbortSignal): Prom
 
 		if (res.ok) return res.json() as Promise<DataType[]>;
 
-		if (res.status === 404) return [];
+		if (!res.ok) {
+			if (res.status === 404) return [];
+			throw await HttpError.fromResponse(res);
+		}
 
 		throw HttpError.fromResponse(res);
 	} catch (error) {

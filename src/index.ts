@@ -1,8 +1,8 @@
 import { createSearchController } from './api/searchController.js';
-import { debounce } from './core/debounce.js';
 import { formatError } from './helpers/formatError.js';
 import { CACHE_KEY, DEBOUNCE_MS } from './helpers/variables.js';
 import { countryCard } from './ui/components/elements/card.js';
+import { renderCountryList } from './ui/components/elements/renderCountryList.js';
 import { header } from './ui/components/header/header.js';
 import { renderMain } from './ui/components/main/main.js';
 import { createLoader } from './ui/loader/loader.js';
@@ -19,13 +19,15 @@ const controller = createSearchController(initialJson);
 const search = document.getElementById('search') as HTMLInputElement;
 const countryList = document.getElementById('country-list');
 
-const debouncedSetQuery = debounce((query: string) => {
-	controller.setQuery(query);
-}, DEBOUNCE_MS);
 search?.addEventListener('input', (e) => {
 	const query = (e.target as HTMLInputElement).value;
-	debouncedSetQuery.cancel();
-	debouncedSetQuery(query);
+	controller.setQuery(query);
+});
+
+search?.addEventListener('keydown', (e) => {
+	if (e.key === 'Enter') {
+		controller.setQuery(search.value);
+	}
 });
 
 let saveTimer: ReturnType<typeof setTimeout>;
@@ -35,11 +37,12 @@ controller.subscribe((state) => {
 	loader.setAttribute('aria-hidden', String(!isLoading));
 
 	if (countryList) {
-		countryList.replaceChildren();
-
-		if (state.results.length > 0) {
-			const cards = state.results.map((country) => countryCard(country));
-			countryList.append(...cards);
+		if (isLoading) {
+			countryList.replaceChildren();
+		} else if (state.query) {
+			renderCountryList(countryList, state.results, countryCard, state.query);
+		} else {
+			countryList.replaceChildren();
 		}
 	}
 
