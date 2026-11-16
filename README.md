@@ -3,7 +3,7 @@
 1. [Task:](https://github.com/rolling-scopes-school/tasks/blob/master/fullstack-engineering/tasks/country-search/README.md)
 2. [Screenshot:](https://postimg.cc/gallery/2mYxsmY)
 3. [Deployment:](https://rs-school-task.netlify.app)
-4. Done **16.11.2026** / deadline **17.11.2026**
+4. Done **17.11.2026** / deadline **17.11.2026**
 5. **Score: 155 / 155**
 
 #### [DESIGN.md](https://github.com/DmitriyHnatiuk/country-search/blob/country-search/DESIGN.md)

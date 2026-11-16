@@ -93,10 +93,6 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 			cache = apiCache.setCache(cache, key, raw);
 
 			const cards = raw.map(mapCountryResponse);
-			for (const r of raw) {
-				const k = r.name?.toLowerCase();
-				if (k) countryByName.set(k, r);
-			}
 
 			updateState({ results: cards, error: null, notFound: false, isLoading: false });
 		} catch (error) {

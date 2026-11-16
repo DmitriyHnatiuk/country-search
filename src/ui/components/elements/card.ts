@@ -64,8 +64,8 @@ export const createMoreInfo = (minInfo: CountryCardType | null, country: DataTyp
 		country.capital ? ` with capital in ${country.capital}` : ''
 	}.`;
 	content.append(
-		createParam('Area', country.area.toLocaleString()),
-		createParam('Borders', country.borders.join(', ')),
+		createParam('Area', country.area?.toLocaleString() || ''),
+		createParam('Borders', country.borders?.join(', ') || ''),
 		createParam('Description', description),
 		createParam('Currencies', country.currencies.map((e) => `${e.name}  ${e.symbol}`).join(', '))
 	);

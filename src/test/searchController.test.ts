@@ -1,9 +1,10 @@
+import type { Mock } from 'vitest';
 import { createSearchController } from '../api/searchController.js';
 import { HttpError } from '../core/errors/HttpError.js';
-import { searchCountries } from '../core/searchCountries.js';
+import { searchCountries, type SearchResponseType } from '../core/searchCountries.js';
 import type { DataType } from '../type/type.js';
 
-const RAW_COUNTRY: DataType = {
+const RAW_COUNTRY: Partial<DataType> = {
 	name: 'Italy',
 	flag: '🇮🇹',
 	capital: 'Rome',
@@ -21,29 +22,35 @@ vi.mock('../core/debounce', () => ({
 	}),
 }));
 vi.mock('../core/searchCountries');
-const mockSearchCountries = vi.mocked(searchCountries);
+const mockSearchCountries = vi.mocked(searchCountries) as Mock<
+	(query: string, signal?: AbortSignal) => Promise<SearchResponseType>
+>;
 
 describe('searchController', () => {
 	let ctrl: ReturnType<typeof createSearchController>;
-
 	beforeEach(() => {
-		vi.useFakeTimers();
 		mockSearchCountries.mockReset();
 		ctrl = createSearchController();
 	});
 
 	afterEach(() => {
-		vi.useRealTimers();
 		vi.restoreAllMocks();
 	});
 
 	const state = () => ctrl.getState();
 
-	it('aborts previous request immediately on new input', async () => {
-		let resolveFirst!: (v: DataType[]) => void;
-		const firstPromise = new Promise<DataType[]>((resolve) => (resolveFirst = resolve));
+	const mockSuccess = (data: DataType[] = [RAW_COUNTRY as DataType]): SearchResponseType => ({
+		data,
+		status: 200,
+	});
 
-		mockSearchCountries.mockImplementationOnce(() => firstPromise).mockResolvedValueOnce([RAW_COUNTRY]);
+	it('aborts previous request immediately on new input', async () => {
+		let resolveFirst!: (v: SearchResponseType) => void;
+		const firstPromise = new Promise<SearchResponseType>((resolve) => (resolveFirst = resolve));
+
+		mockSearchCountries
+			.mockImplementationOnce(() => firstPromise)
+			.mockResolvedValueOnce(mockSuccess([RAW_COUNTRY as DataType]));
 
 		ctrl.setQuery('ita');
 		expect(mockSearchCountries).toHaveBeenCalledTimes(1);
@@ -53,7 +60,7 @@ describe('searchController', () => {
 
 		await vi.waitFor(() => expect(state()?.results[0]?.name).toBe('Italy'));
 		expect(state().error).toBeNull();
-		void resolveFirst;
+		resolveFirst(mockSuccess());
 	});
 
 	it('silently ignores AbortError', async () => {
@@ -90,7 +97,7 @@ describe('searchController', () => {
 	});
 
 	it('maps raw response to CountryCardType on success', async () => {
-		mockSearchCountries.mockResolvedValueOnce([RAW_COUNTRY]);
+		mockSearchCountries.mockResolvedValueOnce(mockSuccess([RAW_COUNTRY as DataType]));
 
 		ctrl.setQuery('ita');
 
@@ -99,7 +106,7 @@ describe('searchController', () => {
 	});
 
 	it('retries last query on retry()', async () => {
-		mockSearchCountries.mockResolvedValueOnce([RAW_COUNTRY]);
+		mockSearchCountries.mockResolvedValueOnce(mockSuccess([RAW_COUNTRY as DataType]));
 
 		ctrl.setQuery('ita');
 		await vi.waitFor(() => expect(state().results.length).toBe(1));
@@ -107,7 +114,7 @@ describe('searchController', () => {
 		ctrl.setQuery('italy');
 		await vi.waitFor(() => expect(state().error).toBe('network'));
 
-		mockSearchCountries.mockResolvedValueOnce([RAW_COUNTRY]);
+		mockSearchCountries.mockResolvedValueOnce(mockSuccess([RAW_COUNTRY as DataType]));
 		ctrl.retry();
 
 		await vi.waitFor(() => expect(state().results.length).toBe(1));

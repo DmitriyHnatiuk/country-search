@@ -1,7 +1,7 @@
 export const formatError = (code: string): string => {
 	switch (code) {
 		case 'network':
-			return 'No internet connection. Please check your network.';
+			return 'Network error or CORS blocked (check API URL)';
 		case 'timeout':
 			return 'Request timed out. Please try again.';
 		case 'abort':

@@ -18,7 +18,7 @@ export type DataType = {
 	population?: number;
 	languages?: LanguagesType[];
 	flags?: FlagsType;
-
+	gini?: number;
 	area: number;
 	cioc: string;
 	latlng: number[];
@@ -37,8 +37,8 @@ export type DataType = {
 	];
 	nativeName: string;
 	independent: boolean;
-	numericCode: number;
-	callingCodes: number[];
+	numericCode: string;
+	callingCodes: string[];
 	topLevelDomain: string[];
 	populationDensity: number;
 };
