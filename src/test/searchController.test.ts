@@ -14,7 +14,11 @@ const RAW_COUNTRY: DataType = {
 };
 
 vi.mock('../core/debounce', () => ({
-	debounce: vi.fn((fn) => fn),
+	debounce: vi.fn((fn) => {
+		const debouncedFn = vi.fn(fn);
+		debouncedFn.cancel = vi.fn();
+		return debouncedFn;
+	}),
 }));
 vi.mock('../core/searchCountries');
 const mockSearchCountries = vi.mocked(searchCountries);
@@ -48,7 +52,7 @@ describe('searchController', () => {
 		expect(mockSearchCountries).toHaveBeenCalledTimes(2);
 
 		await vi.waitFor(() => expect(state()?.results[0]?.name).toBe('Italy'));
-		expect(state().error).toBeUndefined();
+		expect(state().error).toBeNull();
 		void resolveFirst;
 	});
 
@@ -57,7 +61,7 @@ describe('searchController', () => {
 
 		ctrl.setQuery('ita');
 
-		await vi.waitFor(() => expect(state().error).toBeUndefined());
+		await vi.waitFor(() => expect(state().error).toBeNull());
 		expect(state().results).toEqual([]);
 	});
 
@@ -95,12 +99,18 @@ describe('searchController', () => {
 	});
 
 	it('retries last query on retry()', async () => {
-		mockSearchCountries.mockRejectedValueOnce(new TypeError('Failed')).mockResolvedValueOnce([RAW_COUNTRY]);
+		mockSearchCountries.mockResolvedValueOnce([RAW_COUNTRY]);
 
 		ctrl.setQuery('ita');
+		await vi.waitFor(() => expect(state().results.length).toBe(1));
+		mockSearchCountries.mockRejectedValueOnce(new TypeError('Failed'));
+		ctrl.setQuery('italy');
 		await vi.waitFor(() => expect(state().error).toBe('network'));
 
+		mockSearchCountries.mockResolvedValueOnce([RAW_COUNTRY]);
 		ctrl.retry();
+
 		await vi.waitFor(() => expect(state().results.length).toBe(1));
+		expect(state().error).toBeNull();
 	});
 });

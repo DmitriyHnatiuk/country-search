@@ -1,36 +1,46 @@
 import { debounce } from '../core/debounce.js';
-import { HttpError } from '../core/errors/HttpError.js';
 import { mapCountryResponse } from '../core/mapCountryResponse.js';
 import { searchCountries } from '../core/searchCountries.js';
+import { DEBOUNCE_MS, TIMEOUT_MS } from '../helpers/variables.js';
 import type { CountryCardType, SearchControllerType, SearchStateType } from '../type/type.js';
+import { HttpError } from './../core/errors/HttpError.js';
 import { apiCache } from './apiCache.js';
 import { createSearchSignal } from './createSearchSignal.js';
 
-export const createSearchController = (): SearchControllerType => {
+type ListenerType = (state: SearchStateType) => void;
+export const createSearchController = (initialCacheJson?: string): SearchControllerType => {
+	let cache = apiCache.createCache<string, CountryCardType[]>();
+
+	if (initialCacheJson) {
+		const result = apiCache.deserialize<string, CountryCardType[]>(initialCacheJson);
+		if (result.ok) cache = result.value;
+	}
+
 	let state: SearchStateType = {
 		query: '',
 		results: [],
-		error: undefined,
+		error: null,
 		isLoading: false,
 	};
-	let cache = apiCache.createCache<string, CountryCardType[]>();
+
 	let controller: AbortController | null = null;
 	let lastQuery = '';
-	const listeners = new Set<() => void>();
+	const listeners = new Set<ListenerType>();
 
-	const notify = () => listeners.forEach((fn) => fn());
-	const updateState = (patch: Partial<typeof state>) => {
+	const notify = () => listeners.forEach((fn) => fn(state));
+
+	const updateState = (patch: Partial<SearchStateType>) => {
 		state = { ...state, ...patch };
 		notify();
 	};
 
 	const executeSearch = async (query: string) => {
 		const key = query.toLowerCase();
-
 		const hit = apiCache.getCache(cache, key);
+
 		if (hit) {
 			cache = hit.cache;
-			updateState({ results: hit.value, error: undefined, isLoading: false });
+			updateState({ results: hit.value, error: null, isLoading: false });
 			return;
 		}
 
@@ -39,14 +49,15 @@ export const createSearchController = (): SearchControllerType => {
 		controller = abortController;
 		lastQuery = query;
 
-		const signal = createSearchSignal(abortController.signal, 5000);
-		updateState({ isLoading: true, error: undefined });
+		const signal = createSearchSignal(abortController.signal, TIMEOUT_MS);
+		updateState({ isLoading: true, error: null });
 
 		try {
 			const raw = await searchCountries(query, signal);
 			const cards = raw.map(mapCountryResponse);
+
 			cache = apiCache.setCache(cache, key, cards);
-			updateState({ results: cards });
+			updateState({ results: cards, error: null });
 		} catch (error) {
 			if (error instanceof DOMException && error.name === 'AbortError') return;
 			if (error instanceof DOMException && error.name === 'TimeoutError') return updateState({ error: 'timeout' });
@@ -54,31 +65,45 @@ export const createSearchController = (): SearchControllerType => {
 			if (error instanceof TypeError) return updateState({ error: 'network' });
 			throw error;
 		} finally {
-			updateState({ isLoading: false });
+			if (controller === abortController) {
+				updateState({ isLoading: false });
+			}
 		}
 	};
 
-	const debouncedSearch = debounce(executeSearch, 300);
+	const getCacheSnapshot = (): string => apiCache.serialize(cache);
+	const debouncedSearch = debounce(executeSearch, DEBOUNCE_MS);
 
 	return {
 		getState: () => state,
 		subscribe: (fn) => {
 			listeners.add(fn);
+			fn(state);
 			return () => listeners.delete(fn);
 		},
 
 		setQuery: (query) => {
-			state.query = query;
+			const trimmed = query.trim();
+			debouncedSearch.cancel();
 			controller?.abort();
-			debouncedSearch(query);
+			if (!trimmed) {
+				updateState({ results: [], error: null, isLoading: false });
+				return;
+			}
+			updateState({ query: trimmed });
+			debouncedSearch(trimmed);
 		},
 
 		retry: () => {
-			if (lastQuery) executeSearch(lastQuery);
+			if (lastQuery) {
+				controller?.abort();
+				executeSearch(lastQuery);
+			}
 		},
 
 		clearCache: () => {
 			cache = apiCache.clearCache();
 		},
+		getCacheSnapshot,
 	};
 };

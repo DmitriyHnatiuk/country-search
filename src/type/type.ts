@@ -33,7 +33,7 @@ export type CountryCardType = {
 export type SearchStateType = {
 	query: string;
 	results: CountryCardType[];
-	error: string | undefined;
+	error: string | null;
 	isLoading: boolean;
 };
 
@@ -43,4 +43,5 @@ export type SearchControllerType = {
 	setQuery: (q: string) => void;
 	retry: () => void;
 	clearCache: () => void;
+	getCacheSnapshot: () => string;
 };
