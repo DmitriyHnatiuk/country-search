@@ -32,12 +32,11 @@ countryList?.addEventListener('click', (e) => {
 	const card = target.closest('[data-country-name]') as HTMLLIElement;
 
 	if (!card) return;
-	const name = card.dataset.countryName;
-	if (!name) return;
 
-	const country = controller.getCountry(name);
+	const country = controller.getCountry(card.dataset.countryName!);
 	if (country) {
-		modal.setContent(createMoreInfo(country));
+		const [minInfo] = controller.getState().results.filter((e) => e.name === card.dataset.countryName);
+		modal.setContent(createMoreInfo(minInfo || null, country));
 		modal.open();
 	}
 });

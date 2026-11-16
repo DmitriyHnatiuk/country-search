@@ -18,6 +18,29 @@ export type DataType = {
 	population?: number;
 	languages?: LanguagesType[];
 	flags?: FlagsType;
+
+	area: number;
+	cioc: string;
+	latlng: number[];
+	borders: string[];
+	demonym: string;
+	subregion: string;
+	timezones: string[];
+	alpha2Code: string;
+	alpha3Code: string;
+	currencies: [
+		{
+			code: string;
+			name: string;
+			symbol: string;
+		},
+	];
+	nativeName: string;
+	independent: boolean;
+	numericCode: number;
+	callingCodes: number[];
+	topLevelDomain: string[];
+	populationDensity: number;
 };
 
 export type CountryCardType = {

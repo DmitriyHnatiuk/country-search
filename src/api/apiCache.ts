@@ -1,3 +1,5 @@
+import { MAX_CACHE_KEY_ENTRIES } from '../helpers/variables.js';
+
 export type ApiCacheType<K, V> = {
 	readonly map: ReadonlyMap<K, V>;
 };
@@ -14,9 +16,12 @@ const getCache = <K, V>(cache: ApiCacheType<K, V>, key: K): { value: V; cache: A
 };
 
 const setCache = <K, V>(cache: ApiCacheType<K, V>, key: K, value: V): ApiCacheType<K, V> => {
-	return {
-		map: new Map(cache.map).set(key, value),
-	};
+	const newMap = new Map(cache.map).set(key, value);
+	if (newMap.size > MAX_CACHE_KEY_ENTRIES) {
+		const firstKey = newMap.keys().next().value;
+		if (firstKey) newMap.delete(firstKey);
+	}
+	return { map: newMap };
 };
 
 const clearCache = <K, V>(): ApiCacheType<K, V> => {

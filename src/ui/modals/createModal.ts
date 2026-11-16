@@ -5,7 +5,7 @@ export const createModal = () => {
 	injectStyles('src/ui/modals/style.css');
 
 	const contentWrap = createElement({
-		tag: 'ul',
+		tag: 'div',
 		className: 'modal-content',
 	});
 
