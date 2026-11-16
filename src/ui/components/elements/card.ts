@@ -58,11 +58,16 @@ export const renderEmptyCard = (query: string) => {
 export const createMoreInfo = (minInfo: CountryCardType | null, country: DataType) => {
 	const flag = createFlag(country.flags?.svg || country.flags?.png || '', country.name!);
 	const content = minInfo ? createContent(minInfo) : createElement({ tag: 'div' });
+	const description = `${country.name ?? 'This country'}${
+		country.nativeName && country.nativeName !== country.name ? ` (${country.nativeName})` : ''
+	} is a country located in ${country.subregion || country.region || 'the world'}${
+		country.capital ? ` with capital in ${country.capital}` : ''
+	}.`;
 	content.append(
 		createParam('Area', country.area.toLocaleString()),
-		createParam('Subregion', country.subregion),
-		country.timezones[0] ? createParam('Timezones', country.timezones[0]) : '',
-		createParam('Code', country.numericCode.toLocaleString())
+		createParam('Borders', country.borders.join(', ')),
+		createParam('Description', description),
+		createParam('Currencies', country.currencies.map((e) => `${e.name}  ${e.symbol}`).join(', '))
 	);
 	content.prepend(flag);
 
