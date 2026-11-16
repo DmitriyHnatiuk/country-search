@@ -86,6 +86,34 @@ main {
 	}
 }
 
+.clear-cache-btn {
+	height: 2rem;
+	border-radius: 1.3rem;
+	border: none;
+	outline: none;
+	background-color: rgba(255, 255, 255, 0.6);
+	transition: background-color 0.6s;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 1.4rem;
+	cursor: pointer;
+	color: #000;
+	line-height: 1;
+	font-size: 1.1rem;
+	margin-bottom: 1rem;
+}
+
+.clear-cache-btn:hover,
+.clear-cache-btn:focus {
+	background-color: white;
+}
+
+.clear-cache-btn:focus-visible {
+	outline: 2px solid #000;
+	outline-offset: 2px;
+}
+
 .cards__list {
 	display: flex;
 	justify-content: center;

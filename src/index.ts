@@ -16,6 +16,7 @@ const toast = createToast();
 const initialJson = localStorage.getItem(CACHE_KEY) ?? '[]';
 const controller = createSearchController(initialJson);
 
+const clearCacheBtn = document.getElementById('clear-cache-btn');
 const search = document.getElementById('search') as HTMLInputElement;
 const countryList = document.getElementById('country-list');
 
@@ -28,6 +29,13 @@ search?.addEventListener('keydown', (e) => {
 	if (e.key === 'Enter') {
 		controller.setQuery(search.value);
 	}
+});
+
+clearCacheBtn?.addEventListener('click', () => {
+	localStorage.removeItem(CACHE_KEY);
+	controller.clearCache();
+	controller.setQuery('');
+	search.value = '';
 });
 
 let saveTimer: ReturnType<typeof setTimeout>;
