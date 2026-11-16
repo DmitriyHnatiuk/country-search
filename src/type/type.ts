@@ -57,6 +57,7 @@ export type SearchStateType = {
 	query: string;
 	results: CountryCardType[];
 	error: string | null;
+	notFound: boolean;
 	isLoading: boolean;
 };
 
@@ -68,4 +69,5 @@ export type SearchControllerType = {
 	clearCache: () => void;
 	getCacheSnapshot: () => string;
 	getCountry: (name: string) => DataType | null;
+	restoreLastSuccess: () => void;
 };

@@ -2,20 +2,22 @@ import { API_BASE_URL } from '../helpers/variables.js';
 import type { DataType } from '../type/type.js';
 import { HttpError } from './errors/HttpError.js';
 
-export async function searchCountries(query: string, signal?: AbortSignal): Promise<DataType[]> {
+export type SearchResponseType = {
+	data: DataType[];
+	status: number;
+};
+export async function searchCountries(query: string, signal?: AbortSignal): Promise<SearchResponseType> {
 	const url = `${API_BASE_URL}${encodeURIComponent(query)}`;
 
 	try {
 		const res = await fetch(url, { ...(signal && { signal }) });
 
-		if (res.ok) return res.json() as Promise<DataType[]>;
-
+		if (res.status === 404) return { data: [], status: 404 };
 		if (!res.ok) {
-			if (res.status === 404) return [];
 			throw await HttpError.fromResponse(res);
 		}
 
-		throw HttpError.fromResponse(res);
+		return { data: (await res.json()) as DataType[], status: 200 };
 	} catch (error) {
 		if (error instanceof HttpError || error instanceof TypeError || error instanceof DOMException) {
 			throw error;

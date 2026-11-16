@@ -55,33 +55,53 @@ clearCacheBtn?.addEventListener('click', () => {
 });
 
 let saveTimer: ReturnType<typeof setTimeout>;
+let prevError: string | null = null;
+let prevNotFound: boolean | null = null;
 controller.subscribe((state) => {
-	const isLoading = state.isLoading;
+	const { isLoading, query, results, notFound, error } = state;
 	loader.classList.toggle('is-hidden', !isLoading);
 	loader.setAttribute('aria-hidden', String(!isLoading));
-
+	if (search && search.value !== query) {
+		search.value = query;
+	}
 	if (countryList) {
 		if (isLoading) {
 			countryList.replaceChildren();
-		} else if (state.query) {
-			renderCountryList(countryList, state.results, countryCard, state.query);
+		} else if (query) {
+			renderCountryList(countryList, results, countryCard, query);
 		} else {
 			countryList.replaceChildren();
 		}
 	}
 
-	if (state.error) {
-		const isRetryable = state.error === 'network' || state.error.startsWith('server:');
-		toast.show({
-			message: formatError(state.error),
-			actionLabel: isRetryable ? 'Retry' : 'X',
-			onAction: () => (isRetryable ? controller.retry() : null),
-			duration: isRetryable ? 0 : 5000,
-		});
-	} else {
-		toast.hide();
+	if (notFound !== prevNotFound) {
+		if (notFound && query) {
+			toast.show({
+				message: `Nothing found for «${query}»`,
+				actionLabel: 'OK',
+				onAction: () => controller.restoreLastSuccess(),
+				duration: 0,
+			});
+		} else {
+			toast.hide();
+		}
+		prevNotFound = notFound;
 	}
 
+	if (error !== prevError) {
+		if (error) {
+			const isRetryable = error === 'network' || error.startsWith('server:');
+			toast.show({
+				message: formatError(error),
+				actionLabel: isRetryable ? 'Retry' : '✕',
+				onAction: () => (isRetryable ? controller.retry() : null),
+				duration: isRetryable ? 0 : 5000,
+			});
+		} else {
+			toast.hide();
+		}
+		prevError = error;
+	}
 	clearTimeout(saveTimer);
 	saveTimer = setTimeout(() => {
 		try {

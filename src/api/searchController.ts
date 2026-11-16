@@ -1,7 +1,7 @@
 import { debounce } from '../core/debounce.js';
 import { HttpError } from '../core/errors/HttpError.js';
 import { mapCountryResponse } from '../core/mapCountryResponse.js';
-import { searchCountries } from '../core/searchCountries.js';
+import { searchCountries, type SearchResponseType } from '../core/searchCountries.js';
 import { DEBOUNCE_MS, TIMEOUT_MS } from '../helpers/variables.js';
 import type { DataType, SearchControllerType, SearchStateType } from '../type/type.js';
 import { apiCache } from './apiCache.js';
@@ -11,10 +11,16 @@ type ListenerType = (state: SearchStateType) => void;
 export const createSearchController = (initialCacheJson?: string): SearchControllerType => {
 	let cache = apiCache.createCache<string, DataType[]>();
 	let countryByName = new Map<string, DataType>();
+	let lastSuccessfulQuery = '';
 	if (initialCacheJson) {
 		const result = apiCache.deserialize<string, DataType[]>(initialCacheJson);
 		if (result.ok) {
 			cache = result.value;
+
+			lastSuccessfulQuery = [...cache.map.entries()].reduce(
+				(last, [key, rawArray]) => (rawArray.length > 0 ? key : last),
+				''
+			);
 			countryByName = new Map(
 				Array.from(cache.map.values())
 					.flat()
@@ -31,6 +37,7 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 		query: '',
 		results: [],
 		error: null,
+		notFound: false,
 		isLoading: false,
 	};
 
@@ -56,7 +63,12 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 
 		if (hit) {
 			cache = hit.cache;
-			updateState({ results: hit.value.map(mapCountryResponse), error: null, isLoading: false });
+			updateState({
+				results: hit.value.map(mapCountryResponse),
+				error: null,
+				notFound: hit.value.length === 0,
+				isLoading: false,
+			});
 			return;
 		}
 
@@ -68,8 +80,15 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 		const signal = createSearchSignal(abortController.signal, TIMEOUT_MS);
 
 		try {
-			const raw = await searchCountries(query, signal);
+			const { data: raw, status }: SearchResponseType = await searchCountries(query, signal);
 			if (abortController.signal.aborted) return;
+
+			if (status === 404) {
+				cache = apiCache.setCache(cache, key, raw);
+				updateState({ results: [], error: null, notFound: true, isLoading: false });
+				return;
+			}
+			lastSuccessfulQuery = query;
 			raw.map((c: DataType) => (c.name ? countryByName.set(c.name.toLowerCase(), c) : ''));
 			cache = apiCache.setCache(cache, key, raw);
 
@@ -79,7 +98,7 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 				if (k) countryByName.set(k, r);
 			}
 
-			updateState({ results: cards, error: null, isLoading: false });
+			updateState({ results: cards, error: null, notFound: false, isLoading: false });
 		} catch (error) {
 			if (abortController.signal.aborted) return;
 			if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -101,6 +120,22 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 	}, DEBOUNCE_MS);
 
 	const getCacheSnapshot = (): string => apiCache.serialize(cache);
+
+	const startSearch = (
+		query: string,
+		opts: { isLoading?: boolean; error?: string | null; notFound?: boolean } = {}
+	) => {
+		debouncedSearch.cancel();
+		abortActiveRequest();
+		updateState({
+			query,
+			isLoading: true,
+			error: null,
+			notFound: false,
+			...opts,
+		});
+		executeSearch(query);
+	};
 
 	return {
 		getState: () => state,
@@ -124,12 +159,7 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 		},
 
 		retry: () => {
-			if (lastQuery) {
-				debouncedSearch.cancel();
-				abortActiveRequest();
-				updateState({ isLoading: true, error: null });
-				executeSearch(lastQuery);
-			}
+			if (lastQuery) startSearch(lastQuery);
 		},
 
 		clearCache: () => {
@@ -138,5 +168,16 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 		},
 		getCacheSnapshot,
 		getCountry: (name: string) => countryByName.get(name.toLowerCase()) || null,
+
+		restoreLastSuccess: () => {
+			if (!lastSuccessfulQuery) {
+				debouncedSearch.cancel();
+				abortActiveRequest();
+				updateState({ query: '', results: [], error: null, notFound: false, isLoading: false });
+				return;
+			}
+
+			startSearch(lastSuccessfulQuery);
+		},
 	};
 };

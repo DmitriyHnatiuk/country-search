@@ -11,7 +11,7 @@ describe('searchCountries', () => {
 	beforeEach(() => mockFetch.mockReset());
 	afterEach(() => vi.resetAllMocks());
 
-	it('returns countries array on 200 OK', async () => {
+	it('returns SearchResponse with data and status 200 on OK', async () => {
 		const data = [{ name: 'Italy', code: 'It' }];
 		mockFetch.mockResolvedValueOnce({
 			ok: true,
@@ -21,11 +21,11 @@ describe('searchCountries', () => {
 
 		const result = await searchCountries(QUERY);
 
-		expect(result).toEqual(data);
+		expect(result).toEqual({ data, status: 200 });
 		expect(mockFetch).toHaveBeenCalledWith(`${API_BASE_URL}${QUERY}`, expect.objectContaining({}));
 	});
 
-	it('returns empty array on 404 Not Found - not error', async () => {
+	it('returns SearchResponse with empty data and status 404 on Not Found', async () => {
 		mockFetch.mockResolvedValueOnce({
 			ok: false,
 			status: 404,
@@ -34,7 +34,7 @@ describe('searchCountries', () => {
 
 		const result = await searchCountries('no-match-xyz');
 
-		expect(result).toEqual([]);
+		expect(result).toEqual({ data: [], status: 404 });
 	});
 
 	it('passes AbortSignal to fetch', async () => {

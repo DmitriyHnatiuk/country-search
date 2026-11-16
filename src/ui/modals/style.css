@@ -57,7 +57,7 @@
 	font-weight: 600;
 	color: #1f2937;
 	border: none;
-	border-radius: 50%;
+	border-radius: 3px;
 	cursor: pointer;
 	transition: background 0.15s ease;
 }
