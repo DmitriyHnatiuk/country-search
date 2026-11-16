@@ -1,5 +1,6 @@
+import { mapCountryResponse } from '../../../core/mapCountryResponse.js';
 import { createElement } from '../../../helpers/createElement.js';
-import type { CountryCardType } from '../../../type/type.js';
+import type { CountryCardType, DataType } from '../../../type/type.js';
 
 const createParam = (label: string, value: string) => {
 	const p = createElement({
@@ -48,4 +49,9 @@ export const renderEmptyCard = (query: string) => {
 		className: 'country__card--empty',
 		textContent: `No results for «${query}»`,
 	});
+};
+
+export const createMoreInfo = (country: DataType) => {
+	const minInfo = mapCountryResponse(country);
+	return countryCard(minInfo);
 };

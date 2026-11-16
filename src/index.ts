@@ -1,17 +1,19 @@
 import { createSearchController } from './api/searchController.js';
 import { formatError } from './helpers/formatError.js';
 import { CACHE_KEY, DEBOUNCE_MS } from './helpers/variables.js';
-import { countryCard } from './ui/components/elements/card.js';
+import { countryCard, createMoreInfo } from './ui/components/elements/card.js';
 import { renderCountryList } from './ui/components/elements/renderCountryList.js';
 import { header } from './ui/components/header/header.js';
 import { renderMain } from './ui/components/main/main.js';
 import { createLoader } from './ui/loader/loader.js';
+import { createModal } from './ui/modals/createModal.js';
 import { createToast } from './ui/modals/toast.js';
 
 document.body.append(header(), renderMain());
 
 const loader = createLoader();
 const toast = createToast();
+const modal = createModal();
 
 const initialJson = localStorage.getItem(CACHE_KEY) ?? '[]';
 const controller = createSearchController(initialJson);
@@ -23,6 +25,21 @@ const countryList = document.getElementById('country-list');
 search?.addEventListener('input', (e) => {
 	const query = (e.target as HTMLInputElement).value;
 	controller.setQuery(query);
+});
+
+countryList?.addEventListener('click', (e) => {
+	const target = e?.target as HTMLElement;
+	const card = target.closest('[data-country-name]') as HTMLLIElement;
+
+	if (!card) return;
+	const name = card.dataset.countryName;
+	if (!name) return;
+
+	const country = controller.getCountry(name);
+	if (country) {
+		modal.setContent(createMoreInfo(country));
+		modal.open();
+	}
 });
 
 search?.addEventListener('keydown', (e) => {

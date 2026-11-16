@@ -44,4 +44,5 @@ export type SearchControllerType = {
 	retry: () => void;
 	clearCache: () => void;
 	getCacheSnapshot: () => string;
+	getCountry: (name: string) => DataType | null;
 };

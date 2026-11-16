@@ -3,14 +3,14 @@ import { HttpError } from '../core/errors/HttpError.js';
 import { mapCountryResponse } from '../core/mapCountryResponse.js';
 import { searchCountries } from '../core/searchCountries.js';
 import { DEBOUNCE_MS, TIMEOUT_MS } from '../helpers/variables.js';
-import type { CountryCardType, SearchControllerType, SearchStateType } from '../type/type.js';
+import type { CountryCardType, DataType, SearchControllerType, SearchStateType } from '../type/type.js';
 import { apiCache } from './apiCache.js';
 import { createSearchSignal } from './createSearchSignal.js';
 
 type ListenerType = (state: SearchStateType) => void;
 export const createSearchController = (initialCacheJson?: string): SearchControllerType => {
 	let cache = apiCache.createCache<string, CountryCardType[]>();
-
+	const countryByName = new Map<string, DataType>();
 	if (initialCacheJson) {
 		const result = apiCache.deserialize<string, CountryCardType[]>(initialCacheJson);
 		if (result.ok) cache = result.value;
@@ -59,6 +59,8 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 		try {
 			const raw = await searchCountries(query, signal);
 			if (abortController.signal.aborted) return;
+			raw.map((c: DataType) => (c.name ? countryByName.set(c.name.toLowerCase(), c) : ''));
+
 			const cards = raw.map(mapCountryResponse);
 			cache = apiCache.setCache(cache, key, cards);
 			updateState({ results: cards, error: null, isLoading: false });
@@ -116,7 +118,9 @@ export const createSearchController = (initialCacheJson?: string): SearchControl
 
 		clearCache: () => {
 			cache = apiCache.clearCache();
+			countryByName.clear();
 		},
 		getCacheSnapshot,
+		getCountry: (name: string) => countryByName.get(name.toLowerCase()) || null,
 	};
 };

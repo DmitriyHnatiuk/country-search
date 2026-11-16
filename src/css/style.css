@@ -123,45 +123,65 @@ main {
 	margin: 3rem 0;
 	list-style: none;
 	min-width: 100%;
-}
 
-.country__card {
-	flex: 1 0 20%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: 1.5rem;
-	padding: 1rem 1.25rem;
-	border-radius: 10px;
-	background: #fff;
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
-	border: 1px solid #eee;
-	cursor: pointer;
-	transition:
-		box-shadow 0.2s,
-		transform 0.2s;
+	.country__card {
+		flex: 1 0 20%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 1.5rem;
+		padding: 1rem 1.25rem;
+		border-radius: 10px;
+		background: #fff;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+		border: 1px solid #eee;
+		cursor: pointer;
+		transition:
+			box-shadow 0.2s,
+			transform 0.2s;
 
-	@media (min-width: 72rem) {
-		max-width: 24%;
+		@media (min-width: 72rem) {
+			max-width: 24%;
+		}
 	}
-}
 
-.country__card:hover {
-	box-shadow: 0 0.4rem 1.2rem #ffffffc2;
-	transform: translateY(-2px);
-}
+	.country__card:hover {
+		box-shadow: 0 0.4rem 1.2rem #ffffffc2;
+		transform: translateY(-2px);
+	}
 
-.country__card--content {
-	flex: 1;
-	min-width: 0;
-}
+	.country__card--content {
+		flex: 1;
+		min-width: 0;
+	}
 
-.country__card--title {
-	margin: 0;
-	font-size: 2.8rem;
-	font-weight: 700;
-	color: #111;
-	line-height: 1.2;
+	.country__card--title {
+		margin: 0;
+		font-size: 2.8rem;
+		font-weight: 700;
+		color: #111;
+		line-height: 1.2;
+	}
+	.country__card--flag {
+		flex-shrink: 0;
+		width: 7.5rem;
+		height: 6rem;
+		border-radius: 6px;
+		box-shadow: 0 3px 4px rgba(0, 0, 0, 0.1);
+		background: #f5f5f5;
+		object-fit: cover;
+	}
+
+	@media (max-width: 32rem) {
+		.country__card {
+			flex-direction: column;
+		}
+		.country__card--flag {
+			width: 4.5rem;
+			height: 3.4rem;
+			margin: auto;
+		}
+	}
 }
 
 .country__card--param {
@@ -174,27 +194,6 @@ main {
 	color: #55b;
 	font-weight: 600;
 	margin-right: 0.375rem;
-}
-
-.country__card--flag {
-	flex-shrink: 0;
-	width: 7.5rem;
-	height: 6rem;
-	border-radius: 6px;
-	box-shadow: 0 3px 4px rgba(0, 0, 0, 0.1);
-	background: #f5f5f5;
-	object-fit: cover;
-}
-
-@media (max-width: 32rem) {
-	.country__card {
-		flex-direction: column;
-	}
-	.country__card--flag {
-		width: 4.5rem;
-		height: 3.4rem;
-		margin: auto;
-	}
 }
 
 .country__card--empty {
